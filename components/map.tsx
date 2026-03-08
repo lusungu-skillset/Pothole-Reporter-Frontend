@@ -2,68 +2,92 @@
 
 import { useEffect, useState } from "react";
 
-export default function Map({ onSelect }: { onSelect?: (pos: any) => void }) {
-  const [components, setComponents] = useState<any>(null);
-  const [L, setL] = useState<any>(null);
-  const [clickedPos, setClickedPos] = useState<any>(null);
+type LatLng = {
+  lat: number;
+  lng: number;
+};
+
+type ReactLeafletModule = typeof import("react-leaflet");
+type LeafletModule = typeof import("leaflet");
+
+type LeafletBundle = {
+  RL: ReactLeafletModule;
+  L: LeafletModule;
+};
+
+let leafletBundlePromise: Promise<LeafletBundle> | null = null;
+let defaultLeafletIconConfigured = false;
+
+function loadLeafletBundle() {
+  if (!leafletBundlePromise) {
+    leafletBundlePromise = Promise.all([import("react-leaflet"), import("leaflet")]).then(([RL, L]) => ({
+      RL,
+      L,
+    }));
+  }
+
+  return leafletBundlePromise;
+}
+
+function configureDefaultIcon(L: LeafletModule) {
+  if (defaultLeafletIconConfigured) return;
+
+  delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: "/leaflet/marker-icon-2x.png",
+    iconUrl: "/leaflet/marker-icon.png",
+    shadowUrl: "/leaflet/marker-shadow.png",
+  });
+
+  defaultLeafletIconConfigured = true;
+}
+
+export default function Map({ onSelect }: { onSelect?: (pos: LatLng) => void }) {
+  const [bundle, setBundle] = useState<LeafletBundle | null>(null);
+  const [clickedPos, setClickedPos] = useState<LatLng | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    let isMounted = true;
 
-    Promise.all([import("react-leaflet"), import("leaflet")])
-      .then(([RL, LeafletLib]) => {
-        setL(LeafletLib);
-
-        // Fix default Leaflet icon paths
-        delete (LeafletLib.Icon.Default.prototype as any)._getIconUrl;
-        LeafletLib.Icon.Default.mergeOptions({
-          iconRetinaUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-          iconUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-          shadowUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-        });
-
-        // Red marker icon ONLY
-        (window as any).redIcon = new LeafletLib.Icon({
-          iconUrl:
-            "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-          shadowUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-        });
-
-        // Inject Leaflet CSS once
-        const href =
-          "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-        if (!document.querySelector(`link[href="${href}"]`)) {
-          const link = document.createElement("link");
-          link.rel = "stylesheet";
-          link.href = href;
-          document.head.appendChild(link);
+    loadLeafletBundle()
+      .then((loadedBundle) => {
+        configureDefaultIcon(loadedBundle.L);
+        if (isMounted) {
+          setBundle(loadedBundle);
         }
-
-        setComponents(RL);
       })
       .catch(console.error);
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  if (!components) return null;
+  if (!bundle) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-muted/30">
+        <p className="text-sm text-muted-foreground">Loading map...</p>
+      </div>
+    );
+  }
 
-  const { MapContainer, TileLayer, Marker, Popup, useMapEvents } = components;
+  const { MapContainer, TileLayer, Marker, Popup, useMapEvents } = bundle.RL;
 
   function ClickMarker() {
     useMapEvents({
-      click(e: any) {
-        setClickedPos(e.latlng);
-        onSelect?.(e.latlng);
+      click(e) {
+        const nextPos = {
+          lat: e.latlng.lat,
+          lng: e.latlng.lng,
+        };
+        setClickedPos(nextPos);
+        onSelect?.(nextPos);
       },
     });
 
     return clickedPos ? (
-      <Marker position={clickedPos} icon={(window as any).redIcon}>
+      <Marker position={clickedPos}>
         <Popup>
           <strong>New report location</strong>
           <br />
@@ -77,17 +101,13 @@ export default function Map({ onSelect }: { onSelect?: (pos: any) => void }) {
 
   return (
     <div className="h-full w-full">
-      <MapContainer
-        center={[-13.9833, 33.7833]}
-        zoom={12}
-        className="h-full w-full"
-      >
+      <MapContainer center={[-13.9833, 33.7833]} zoom={12} preferCanvas className="h-full w-full">
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution="© OpenStreetMap contributors"
+          attribution="&copy; OpenStreetMap contributors"
+          updateWhenIdle
+          keepBuffer={2}
         />
-
-        {/* ONLY the click marker */}
         <ClickMarker />
       </MapContainer>
     </div>

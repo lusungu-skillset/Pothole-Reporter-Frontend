@@ -5,13 +5,13 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
+import { AlertCircle, Lock, ShieldCheck } from "lucide-react"
 import { useAppContext } from "@/contexts/app-context"
+import Navigation from "@/components/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertCircle } from "lucide-react"
-import Navigation from "@/components/navigation"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -21,7 +21,7 @@ export default function LoginPage() {
   const router = useRouter()
   const { setIsAdmin, setAdminEmail } = useAppContext()
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError("")
 
@@ -33,9 +33,6 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const response = await axios.post("http://localhost:3005/auth/login", { email, password })
-
-      console.log("Login response:", response.data)
-
       const { token, admin } = response.data
 
       if (!token || !admin) {
@@ -59,21 +56,45 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen">
       <Navigation />
 
-      <main className="flex-1 flex items-center justify-center px-4 py-16">
-        <Card className="w-full max-w-lg border-border bg-card/50 shadow-2xl">
-          <CardContent className="pt-8 pb-8 px-8">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold mb-2">Admin Login</h1>
-              <p className="text-muted-foreground">Sign in to access the admin dashboard</p>
+      <main className="container mx-auto grid flex-1 items-start gap-8 px-4 py-12 lg:grid-cols-[0.95fr_1.05fr] lg:py-16">
+        <section className="surface-panel hero-shine p-6 md:p-8">
+          <h1 className="mt-5 text-4xl font-black tracking-tight md:text-5xl">
+            RoadSafe Operations Login
+          </h1>
+
+          <p className="mt-4 max-w-xl text-muted-foreground">
+            Authorized personnel can sign in to review pothole reports, update repair statuses,
+            and monitor road maintenance activities.
+          </p>
+
+          <div className="mt-8 grid gap-3 md:grid-cols-2">
+            <div className="rounded-xl border border-border/70 bg-background/70 p-4">
+              <p className="text-sm text-muted-foreground">Commitment</p>
+              <p className="mt-1 font-semibold">Safety First</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-6">
-              {/* Email Field */}
+            <div className="rounded-xl border border-border/70 bg-background/70 p-4">
+              <p className="text-sm text-muted-foreground">Access Level</p>
+              <p className="mt-1 font-semibold">Authorized Personnel Only</p>
+            </div>
+          </div>
+        </section>
+
+        <Card className="surface-panel">
+          <CardContent className="p-6 md:p-8">
+            <div className="mb-7">
+              <h2 className="text-2xl font-bold">Admin Login</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Enter your administrator credentials to access the operations dashboard.
+              </p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">
+                <Label htmlFor="email" className="text-sm font-semibold">
                   Email Address
                 </Label>
                 <Input
@@ -81,15 +102,14 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@potholes.mw"
+                  placeholder="admin@roadsafe.mw"
                   disabled={loading}
-                  className="bg-background border-border focus:border-[#FFCC00] focus:ring-[#FFCC00]"
+                  className="h-11 rounded-xl border-border/80 bg-background/70"
                 />
               </div>
 
-              {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">
+                <Label htmlFor="password" className="text-sm font-semibold">
                   Password
                 </Label>
                 <Input
@@ -99,36 +119,40 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter password"
                   disabled={loading}
-                  className="bg-background border-border focus:border-[#FFCC00] focus:ring-[#FFCC00]"
+                  className="h-11 rounded-xl border-border/80 bg-background/70"
                 />
               </div>
 
-              {/* Error Message */}
               {error && (
-                <div className="flex items-start gap-3 rounded-lg bg-destructive/10 border border-destructive/20 p-4">
-                  <AlertCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+                <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4">
+                  <AlertCircle className="mt-0.5 h-5 w-5 text-destructive" />
                   <p className="text-sm text-destructive">{error}</p>
                 </div>
               )}
 
-              {/* Submit Button */}
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#FFCC00] hover:bg-[#FFCC00]/90 text-black font-semibold h-12 rounded-full transition-transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-11 w-full rounded-xl font-semibold disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {loading ? "Logging in..." : "Login"}
+                {loading ? (
+                  <>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Logging in...
+                  </>
+                ) : (
+                  "Login"
+                )}
               </Button>
             </form>
           </CardContent>
         </Card>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-card py-8">
+      <footer className="border-t border-border/70 bg-card/70 py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p className="font-semibold">© {new Date().getFullYear()} Pothole Reporter</p>
-          <p className="mt-2">Helping communities report and fix road hazards faster</p>
+          <p className="font-semibold">Copyright {new Date().getFullYear()} RoadSafe</p>
+          <p className="mt-2">Secure access for managing community road safety reports.</p>
         </div>
       </footer>
     </div>
