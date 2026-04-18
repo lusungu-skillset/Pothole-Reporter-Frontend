@@ -1,8 +1,10 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { MapPin, Trash2 } from "lucide-react"
+import { CalendarDays, Eye, MapPin, Search, SlidersHorizontal, Trash2 } from "lucide-react"
 import type { Pothole } from "@/components/types/pothole"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -27,12 +29,12 @@ const STATUS_OPTIONS = ["Pending", "In Progress", "Resolved"] as const
 const getStatusClasses = (status?: string) => {
   switch (status) {
     case "Resolved":
-      return "bg-emerald-500 text-white"
+      return "border-emerald-500/20 bg-emerald-500/12 text-emerald-700 dark:text-emerald-300"
     case "In Progress":
-      return "bg-blue-500 text-white"
+      return "border-blue-500/20 bg-blue-500/12 text-blue-700 dark:text-blue-300"
     case "Pending":
     default:
-      return "bg-amber-400 text-black"
+      return "border-amber-500/20 bg-amber-500/12 text-amber-700 dark:text-amber-300"
   }
 }
 
@@ -58,7 +60,7 @@ export default function PotholeList({
       dateFrom: filterDateFrom,
       dateTo: filterDateTo,
     })
-  }, [filterStatus, filterSeverity, filterDistrict, filterDateFrom, filterDateTo])
+  }, [filterStatus, filterSeverity, filterDistrict, filterDateFrom, filterDateTo, onFiltersChange])
 
   const formatDate = (value?: string) => {
     if (!value) return "-"
@@ -118,28 +120,37 @@ export default function PotholeList({
 
   return (
     <div className="space-y-6">
+      {/* UI-only redesign: filters and table rows now read like premium cards while admin actions stay unchanged. */}
       <Card className="surface-panel">
         <CardContent className="p-5 md:p-6">
-          <h3 className="mb-4 text-lg font-bold">Filters and Search</h3>
+          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="section-kicker">Filters and search</p>
+              <h3 className="mt-2 text-2xl font-semibold">Refine the report list.</h3>
+            </div>
+            <div className="info-chip self-start md:self-auto">
+              <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
+              Showing {sortedPotholes.length} of {potholes.length}
+            </div>
+          </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div>
-              <label className="mb-2 block text-sm font-semibold">Search</label>
-              <Input
-                placeholder="Road, district, description..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-10 rounded-xl border-border/80 bg-background/70"
-              />
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Search</label>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Road, district, description..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-11"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-semibold">Status</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="h-10 w-full rounded-xl border border-border/80 bg-background/70 px-3 text-sm"
-              >
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Status</label>
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="select-field">
                 <option value="all">All</option>
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s} value={s}>
@@ -149,13 +160,9 @@ export default function PotholeList({
               </select>
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-semibold">Severity</label>
-              <select
-                value={filterSeverity}
-                onChange={(e) => setFilterSeverity(e.target.value)}
-                className="h-10 w-full rounded-xl border border-border/80 bg-background/70 px-3 text-sm"
-              >
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Severity</label>
+              <select value={filterSeverity} onChange={(e) => setFilterSeverity(e.target.value)} className="select-field">
                 <option value="all">All</option>
                 <option value="Critical">Critical</option>
                 <option value="High">High</option>
@@ -164,13 +171,9 @@ export default function PotholeList({
               </select>
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-semibold">District</label>
-              <select
-                value={filterDistrict}
-                onChange={(e) => setFilterDistrict(e.target.value)}
-                className="h-10 w-full rounded-xl border border-border/80 bg-background/70 px-3 text-sm"
-              >
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">District</label>
+              <select value={filterDistrict} onChange={(e) => setFilterDistrict(e.target.value)} className="select-field">
                 <option value="all">All</option>
                 {districts.map((d) => (
                   <option key={d} value={d}>
@@ -180,99 +183,111 @@ export default function PotholeList({
               </select>
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-semibold">From</label>
-              <Input
-                type="date"
-                value={filterDateFrom}
-                onChange={(e) => setFilterDateFrom(e.target.value)}
-                className="h-10 rounded-xl border-border/80 bg-background/70"
-              />
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold">
+                <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                From
+              </label>
+              <Input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} />
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-semibold">To</label>
-              <Input
-                type="date"
-                value={filterDateTo}
-                onChange={(e) => setFilterDateTo(e.target.value)}
-                className="h-10 rounded-xl border-border/80 bg-background/70"
-              />
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold">
+                <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                To
+              </label>
+              <Input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} />
             </div>
           </div>
-
-          <p className="mt-4 text-sm text-muted-foreground">
-            Showing <strong>{sortedPotholes.length}</strong> of <strong>{potholes.length}</strong> potholes
-          </p>
         </CardContent>
       </Card>
 
       <Card className="surface-panel overflow-hidden p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[940px]">
-            <thead className="bg-muted/45 text-sm">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold">Road</th>
-                <th className="px-4 py-3 text-left font-semibold">District</th>
-                <th className="px-4 py-3 text-left font-semibold">Severity</th>
-                <th className="px-4 py-3 text-left font-semibold">Status</th>
-                <th className="px-4 py-3 text-left font-semibold">Date</th>
-                <th className="px-4 py-3 text-center font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedPotholes.map((p) => (
-                <tr key={p.id} className="border-t border-border/70 text-sm hover:bg-muted/20">
-                  <td className="px-4 py-3">
-                    <button
-                      className="font-medium text-foreground hover:text-primary"
-                      onClick={() => onSelectPothole?.(p.id)}
-                    >
-                      {p.roadName ?? "-"}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3">{p.district ?? "-"}</td>
-                  <td className="px-4 py-3">
-                    <Badge variant="outline">{p.severity ?? "Unknown"}</Badge>
-                  </td>
-                  <td className="px-4 py-3">
-                    <select
-                      value={p.status ?? "Pending"}
-                      onChange={(e) => onUpdateStatus?.(p.id, e.target.value)}
-                      className={`cursor-pointer rounded-lg px-3 py-1 text-xs font-semibold ${getStatusClasses(p.status)}`}
-                    >
-                      {STATUS_OPTIONS.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatDate(p.reportedAt || p.createdAt)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => window.open(`https://www.google.com/maps/search/${p.latitude},${p.longitude}`, "_blank")}
-                      >
-                        <MapPin className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => onDeletePothole?.(p.id)}
-                        className="hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </td>
+        <CardContent className="p-4 md:p-5">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1120px] border-separate [border-spacing:0_12px]">
+              <thead>
+                <tr className="text-left text-sm text-muted-foreground">
+                  <th className="px-4 py-2 font-semibold">Road</th>
+                  <th className="px-4 py-2 font-semibold">District</th>
+                  <th className="px-4 py-2 font-semibold">Severity</th>
+                  <th className="px-4 py-2 font-semibold">Status</th>
+                  <th className="px-4 py-2 font-semibold">Date</th>
+                  <th className="px-4 py-2 text-center font-semibold">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {sortedPotholes.map((p) => {
+                  const cellClass =
+                    "border-y border-border/60 bg-white/72 px-4 py-4 text-sm shadow-[0_18px_44px_-36px_rgba(92,111,189,0.24)] backdrop-blur-md dark:bg-white/6"
+
+                  return (
+                    <tr key={p.id} className="group">
+                      <td className={cn(cellClass, "rounded-l-[22px] border-l")}>
+                        <button
+                          className="font-primary text-left font-semibold text-foreground transition-colors hover:text-primary"
+                          onClick={() => onSelectPothole?.(p.id)}
+                        >
+                          {p.roadName ?? "-"}
+                        </button>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                          {p.description?.slice(0, 72) || "No description available."}
+                        </p>
+                      </td>
+                      <td className={cellClass}>{p.district ?? "-"}</td>
+                      <td className={cellClass}>
+                        <Badge variant="outline">{p.severity ?? "Unknown"}</Badge>
+                      </td>
+                      <td className={cellClass}>
+                        <select
+                          value={p.status ?? "Pending"}
+                          onChange={(e) => onUpdateStatus?.(p.id, e.target.value)}
+                          className={cn(
+                            "h-10 min-w-[8.5rem] rounded-full border px-4 text-xs font-semibold shadow-none outline-none",
+                            getStatusClasses(p.status),
+                          )}
+                        >
+                          {STATUS_OPTIONS.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className={cn(cellClass, "text-muted-foreground")}>{formatDate(p.reportedAt || p.createdAt)}</td>
+                      <td className={cn(cellClass, "rounded-r-[22px] border-r")}>
+                        <div className="flex flex-wrap justify-center gap-2">
+                          <Button asChild size="sm" variant="outline" className="rounded-2xl">
+                            <Link href={`/admin/dashboard/potholes/${p.id}`}>
+                              <Eye className="h-4 w-4" />
+                              <span>Details</span>
+                            </Link>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(`https://www.google.com/maps/search/${p.latitude},${p.longitude}`, "_blank")}
+                            className="rounded-2xl"
+                          >
+                            <MapPin className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => onDeletePothole?.(p.id)}
+                            className="rounded-2xl text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
       </Card>
     </div>
   )

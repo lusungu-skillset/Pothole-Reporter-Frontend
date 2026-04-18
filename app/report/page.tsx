@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import dynamic from "next/dynamic"
-import { AlertCircle, Compass, MapPin } from "lucide-react"
+import { AlertCircle, Compass, MapPin, Radar, Sparkles } from "lucide-react"
 import Navigation from "@/components/navigation"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 
 type LatLng = {
   lat: number
@@ -32,94 +32,125 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="page-shell">
       <Navigation />
 
       <main className="pb-14">
-        <section className="relative overflow-hidden border-b border-border/70 py-12">
-          <div className="road-grid absolute inset-0 opacity-45" />
+        <section className="relative overflow-hidden pb-10 pt-4 md:pb-14 md:pt-8">
+          <div className="road-grid absolute inset-0 opacity-40" />
           <div className="container relative mx-auto px-4">
-            <div className="max-w-3xl">
-              <h1 className="mt-5 text-4xl font-black tracking-tight md:text-5xl">Report a Pothole</h1>
-              <p className="mt-3 text-lg text-muted-foreground">
-                Select the exact map location, then submit the report details. Your existing backend API and upload flow remain unchanged.
-              </p>
+            {/* UI-only redesign: location selection and form now sit in a more premium split workspace. */}
+            <div className="max-w-3xl screen-enter">
+              
+              <h1 className="heading-display mt-6 text-5xl md:text-6xl">Report a pothole with precision.</h1>
             </div>
 
-            <div className="mt-8 grid gap-3 md:grid-cols-3">
-              <div className="surface-panel p-4">
-                <p className="text-sm text-muted-foreground">Step 1</p>
-                <p className="mt-1 font-semibold">Pin the location</p>
-              </div>
-              <div className="surface-panel p-4">
-                <p className="text-sm text-muted-foreground">Step 2</p>
-                <p className="mt-1 font-semibold">Add details and photos</p>
-              </div>
-              <div className="surface-panel p-4">
-                <p className="text-sm text-muted-foreground">Step 3</p>
-                <p className="mt-1 font-semibold">Submit to operations</p>
-              </div>
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              {[
+                ["Step 1", "Pin the location", "Choose the exact place on the map where the road is damaged."],
+                ["Step 2", "Add context", "Describe the pothole and attach optional photo evidence."],
+                ["Step 3", "Submit to ops", "Your report is sent to the city for review and repair dispatch."],
+              ].map(([label, title, body]) => (
+                <div key={title} className="glass-subtle lift-hover screen-enter p-5">
+                  <p className="section-kicker">{label}</p>
+                  <p className="mt-2 font-primary text-lg font-semibold text-foreground">{title}</p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{body}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        <section className="container mx-auto px-4 py-8 md:py-10">
+        <section className="container mx-auto px-4 py-2 md:py-4">
           {!selectedLocation && (
-            <Card className="surface-panel mb-6 p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="mt-0.5 h-5 w-5 text-primary" />
-                <div>
-                  <p className="text-sm font-semibold">Start by selecting a position on the map</p>
-                  <p className="text-sm text-muted-foreground">Precise coordinates improve dispatch and repair speed.</p>
+            <Card className="surface-panel mb-6">
+              <CardContent className="flex items-start gap-4 p-5">
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary dark:bg-white/10 dark:text-white">
+                  <AlertCircle className="h-5 w-5" />
                 </div>
-              </div>
+                <div>
+                  <p className="font-primary text-base font-semibold">Start by placing a pin on the map.</p>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    Accurate coordinates help authorities review and route repair teams faster.
+                  </p>
+                </div>
+              </CardContent>
             </Card>
           )}
 
-          <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-            <Card className="surface-panel p-5 md:p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 text-xl font-bold">
-                  <Compass className="h-5 w-5 text-primary" />
-                  Select Location
-                </h2>
-                {selectedLocation ? (
-                  <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-300">
-                    Location selected
-                  </span>
-                ) : (
-                  <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">Waiting for pin</span>
-                )}
-              </div>
-
-              <div className="h-[560px] overflow-hidden rounded-xl border border-border/70">
-                <Map onSelect={setSelectedLocation} />
-              </div>
-
-              {selectedLocation && (
-                <div className="mt-4 flex items-center gap-2 rounded-xl border border-border/70 bg-background/70 px-4 py-3 text-sm">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  <span className="font-mono text-muted-foreground">
-                    {selectedLocation.lat.toFixed(5)}, {selectedLocation.lng.toFixed(5)}
-                  </span>
+          <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+            <Card className="surface-panel screen-enter overflow-hidden p-0">
+              <CardContent className="p-0">
+                <div className="border-b border-border/60 px-6 py-6 md:px-8">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="section-kicker">Map selection</p>
+                      <h2 className="mt-2 flex items-center gap-2 text-2xl font-semibold">
+                        <Compass className="h-5 w-5 text-primary" />
+                        Select the pothole location
+                      </h2>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Tap the map to capture the exact coordinates before you complete the form.
+                      </p>
+                    </div>
+                    <span className={selectedLocation ? "info-chip" : "rounded-full bg-muted px-3.5 py-2 text-xs font-semibold text-muted-foreground"}>
+                      {selectedLocation ? "Location selected" : "Waiting for pin"}
+                    </span>
+                  </div>
                 </div>
-              )}
+
+                <div className="p-6 md:p-8">
+                  <div className="mb-5 grid gap-3 sm:grid-cols-2">
+                    <div className="field-panel flex items-start gap-3 p-4">
+                      <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary dark:bg-white/10 dark:text-white">
+                        <Radar className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="font-primary text-sm font-semibold">Map guidance</p>
+                        <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                          Zoom in and click the road damage point for the cleanest dispatch handoff.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="field-panel flex items-start gap-3 p-4">
+                      <div className="grid h-11 w-11 place-items-center rounded-2xl bg-cyan-500/10 text-cyan-600 dark:bg-white/10 dark:text-white">
+                        <MapPin className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="font-primary text-sm font-semibold">Selected coordinates</p>
+                        <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                          {selectedLocation
+                            ? `${selectedLocation.lat.toFixed(5)}, ${selectedLocation.lng.toFixed(5)}`
+                            : "No point selected yet. Click the map to capture the exact spot."}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="overflow-hidden rounded-[28px] border border-border/70 bg-white/55 shadow-[0_24px_60px_-38px_rgba(92,111,189,0.34)] backdrop-blur-xl dark:bg-white/6">
+                    <div className="h-[560px]">
+                      <Map onSelect={setSelectedLocation} />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
 
-            <Card className="surface-panel p-5 md:p-6">
-              <ReportForm selectedLocation={selectedLocation} onSubmit={handleReportSubmit} />
-            </Card>
+            <div className="xl:sticky xl:top-28 xl:self-start">
+              <Card className="surface-panel screen-enter p-5 md:p-6">
+                <ReportForm selectedLocation={selectedLocation} onSubmit={handleReportSubmit} />
+              </Card>
+            </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-border/70 bg-card/70 py-8">
-        <div className="container mx-auto px-4 flex flex-col items-center justify-between gap-3 text-center text-sm text-muted-foreground md:flex-row md:text-left">
-          <div className="flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/90 text-primary-foreground font-bold">RS</div>
-            <span className="font-semibold">RoadSafe Reporting</span>
+      <footer className="border-t border-border/60 bg-card/55 py-8 backdrop-blur-xl">
+        <div className="container mx-auto flex flex-col gap-3 px-4 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="font-primary font-semibold text-foreground">RoadSafe</p>
           </div>
-          <p>Location-first reporting that plugs directly into your existing backend services.</p>
+          <p>Copyright {new Date().getFullYear()} RoadSafe</p>
         </div>
       </footer>
     </div>

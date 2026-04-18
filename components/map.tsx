@@ -1,115 +1,131 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react"
 
 type LatLng = {
-  lat: number;
-  lng: number;
-};
+  lat: number
+  lng: number
+}
 
-type ReactLeafletModule = typeof import("react-leaflet");
-type LeafletModule = typeof import("leaflet");
+type LeafletModule = typeof import("leaflet")
+type LeafletMap = ReturnType<LeafletModule["map"]>
+type LeafletMarker = ReturnType<LeafletModule["marker"]>
+type LeafletClickEvent = import("leaflet").LeafletMouseEvent
 
-type LeafletBundle = {
-  RL: ReactLeafletModule;
-  L: LeafletModule;
-};
+let leafletModulePromise: Promise<LeafletModule> | null = null
+let defaultLeafletIconConfigured = false
 
-let leafletBundlePromise: Promise<LeafletBundle> | null = null;
-let defaultLeafletIconConfigured = false;
-
-function loadLeafletBundle() {
-  if (!leafletBundlePromise) {
-    leafletBundlePromise = Promise.all([import("react-leaflet"), import("leaflet")]).then(([RL, L]) => ({
-      RL,
-      L,
-    }));
+function loadLeaflet() {
+  if (!leafletModulePromise) {
+    leafletModulePromise = import("leaflet")
   }
 
-  return leafletBundlePromise;
+  return leafletModulePromise
 }
 
 function configureDefaultIcon(L: LeafletModule) {
-  if (defaultLeafletIconConfigured) return;
+  if (defaultLeafletIconConfigured) return
 
-  delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
+  delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl
   L.Icon.Default.mergeOptions({
     iconRetinaUrl: "/leaflet/marker-icon-2x.png",
     iconUrl: "/leaflet/marker-icon.png",
     shadowUrl: "/leaflet/marker-shadow.png",
-  });
+  })
 
-  defaultLeafletIconConfigured = true;
+  defaultLeafletIconConfigured = true
+}
+
+function getPopupContent(position: LatLng) {
+  return `<strong>New report location</strong><br />Lat: ${position.lat.toFixed(4)}<br />Lng: ${position.lng.toFixed(4)}`
 }
 
 export default function Map({ onSelect }: { onSelect?: (pos: LatLng) => void }) {
-  const [bundle, setBundle] = useState<LeafletBundle | null>(null);
-  const [clickedPos, setClickedPos] = useState<LatLng | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const mapRef = useRef<LeafletMap | null>(null)
+  const markerRef = useRef<LeafletMarker | null>(null)
+  const onSelectRef = useRef(onSelect)
+  const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    let isMounted = true;
+    onSelectRef.current = onSelect
+  }, [onSelect])
 
-    loadLeafletBundle()
-      .then((loadedBundle) => {
-        configureDefaultIcon(loadedBundle.L);
-        if (isMounted) {
-          setBundle(loadedBundle);
-        }
+  useEffect(() => {
+    if (typeof window === "undefined" || !containerRef.current || mapRef.current) return
+
+    let disposed = false
+
+    loadLeaflet()
+      .then((L) => {
+        if (disposed || !containerRef.current) return
+
+        configureDefaultIcon(L)
+
+        const map = L.map(containerRef.current, {
+          center: [-13.9833, 33.7833],
+          zoom: 12,
+          preferCanvas: true,
+        })
+
+        mapRef.current = map
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap contributors",
+          updateWhenIdle: true,
+          keepBuffer: 2,
+        }).addTo(map)
+
+        map.on("click", (event: LeafletClickEvent) => {
+          const nextPos = {
+            lat: event.latlng.lat,
+            lng: event.latlng.lng,
+          }
+
+          if (!markerRef.current) {
+            markerRef.current = L.marker([nextPos.lat, nextPos.lng]).addTo(map)
+            markerRef.current.bindPopup(getPopupContent(nextPos))
+          } else {
+            markerRef.current.setLatLng([nextPos.lat, nextPos.lng])
+            markerRef.current.setPopupContent(getPopupContent(nextPos))
+          }
+
+          markerRef.current.openPopup()
+          onSelectRef.current?.(nextPos)
+        })
+
+        window.requestAnimationFrame(() => {
+          if (!disposed) {
+            map.invalidateSize()
+            setIsReady(true)
+          }
+        })
       })
-      .catch(console.error);
+      .catch((error) => {
+        console.error("Error loading Leaflet:", error)
+      })
 
     return () => {
-      isMounted = false;
-    };
-  }, []);
+      disposed = true
 
-  if (!bundle) {
-    return (
-      <div className="flex h-full w-full items-center justify-center bg-muted/30">
-        <p className="text-sm text-muted-foreground">Loading map...</p>
-      </div>
-    );
-  }
+      if (mapRef.current) {
+        mapRef.current.off()
+        mapRef.current.remove()
+        mapRef.current = null
+      }
 
-  const { MapContainer, TileLayer, Marker, Popup, useMapEvents } = bundle.RL;
-
-  function ClickMarker() {
-    useMapEvents({
-      click(e) {
-        const nextPos = {
-          lat: e.latlng.lat,
-          lng: e.latlng.lng,
-        };
-        setClickedPos(nextPos);
-        onSelect?.(nextPos);
-      },
-    });
-
-    return clickedPos ? (
-      <Marker position={clickedPos}>
-        <Popup>
-          <strong>New report location</strong>
-          <br />
-          Lat: {clickedPos.lat.toFixed(4)}
-          <br />
-          Lng: {clickedPos.lng.toFixed(4)}
-        </Popup>
-      </Marker>
-    ) : null;
-  }
+      markerRef.current = null
+    }
+  }, [])
 
   return (
-    <div className="h-full w-full">
-      <MapContainer center={[-13.9833, 33.7833]} zoom={12} preferCanvas className="h-full w-full">
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution="&copy; OpenStreetMap contributors"
-          updateWhenIdle
-          keepBuffer={2}
-        />
-        <ClickMarker />
-      </MapContainer>
+    <div className="relative h-full w-full overflow-hidden rounded-[28px]">
+      <div ref={containerRef} className="h-full w-full" />
+      {!isReady ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
+          <p className="text-sm text-muted-foreground">Loading map...</p>
+        </div>
+      ) : null}
     </div>
-  );
+  )
 }

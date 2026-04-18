@@ -2,10 +2,22 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { AlertTriangle, CheckCircle, Clock, MapPin, Route, ShieldCheck, TimerReset } from "lucide-react"
+import {
+  AlertTriangle,
+  ArrowRight,
+  Camera,
+  CheckCircle,
+  Clock,
+  Crosshair,
+  MapPin,
+  Route,
+  Sparkles,
+} from "lucide-react"
 import Navigation from "@/components/navigation"
+import { Reveal } from "@/components/ui/reveal"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { getApiUrl } from "@/lib/api"
 
 export default function HomePage() {
   const [stats, setStats] = useState({ reported: "-", repaired: "-", pending: "-" })
@@ -16,7 +28,7 @@ export default function HomePage() {
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 5000)
 
-        const res = await fetch("http://localhost:3005/potholes", {
+        const res = await fetch(getApiUrl("/potholes"), {
           signal: controller.signal,
         })
         clearTimeout(timeoutId)
@@ -47,212 +59,227 @@ export default function HomePage() {
 
   const quickStats = [
     {
-      title: "Potholes Reported",
+      title: "Reported",
       value: stats.reported,
       icon: AlertTriangle,
-      badgeClass: "bg-blue-500/15 text-blue-500",
+      accent: "from-blue-500 to-cyan-400",
+      glow: "bg-blue-500/12 text-blue-600 dark:text-blue-300",
     },
     {
-      title: "Under Review",
+      title: "In Review",
       value: stats.pending,
       icon: Clock,
-      badgeClass: "bg-amber-500/20 text-amber-600 dark:text-amber-300",
+      accent: "from-violet-500 to-fuchsia-400",
+      glow: "bg-violet-500/12 text-violet-600 dark:text-violet-300",
     },
     {
-      title: "Roads Fixed",
+      title: "Fixed",
       value: stats.repaired,
       icon: CheckCircle,
-      badgeClass: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
+      accent: "from-emerald-500 to-cyan-400",
+      glow: "bg-emerald-500/12 text-emerald-600 dark:text-emerald-300",
+    },
+  ]
+
+  const highlights = [
+    {
+      icon: Crosshair,
+      title: "Exact pin",
+      body: "Select the road damage precisely.",
+    },
+    {
+      icon: Camera,
+      title: "Photo proof",
+      body: "Keep pothole imagery clear and intact.",
+    },
+    {
+      icon: Sparkles,
+      title: "Live status",
+      body: "Track review and repair progress.",
+    },
+  ]
+
+  const workflow = [
+    {
+      title: "Pin the spot",
+      body: "Mark the exact pothole location on the map.",
+    },
+    {
+      title: "Add details",
+      body: "Attach a description and optional photos.",
+    },
+    {
+      title: "Track progress",
+      body: "Authorities review and update the report.",
     },
   ]
 
   return (
-    <div className="min-h-screen">
+    <div className="page-shell">
       <Navigation />
 
       <main>
-        <section className="relative overflow-hidden border-b border-border/70 py-16 md:py-24">
-          <div className="road-grid absolute inset-0 opacity-45" />
+        <section className="relative overflow-hidden pb-16 pt-4 md:pb-24 md:pt-8">
+          <div className="road-grid absolute inset-0 opacity-40" />
           <div className="container relative mx-auto px-4">
-            <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
-              <div className="space-y-7">
-                <h1 className="text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
-                  Report Road Hazards. Improve Road Safety.
-                </h1>
-                <p className="max-w-2xl text-lg text-muted-foreground">
-                  Help make roads safer by reporting potholes in seconds. Your report helps road authorities locate
-                  hazards quickly and repair damaged roads for everyone.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <Button asChild size="lg" className="rounded-full px-7">
-                    <Link href="/report">
-                      <MapPin className="mr-2 h-5 w-5" />
-                      Report Pothole
-                    </Link>
-                  </Button>
-                  <Button asChild size="lg" variant="outline" className="rounded-full px-7">
-                    <Link href="/map">
-                      <Route className="mr-2 h-5 w-5" />
-                      View Map
-                    </Link>
-                  </Button>
+            <div className="grid gap-10 xl:grid-cols-[0.9fr_1.1fr] xl:items-start">
+              <div className="space-y-8 mt-[10vh]">
+                <div className="space-y-5">
+                  <Reveal as="h1" delay={80} className="heading-display text-5xl sm:text-6xl xl:text-7xl">
+                    Report potholes faster. Keep roads safer.
+                  </Reveal>
+                  <Reveal as="p" delay={140} className="body-copy max-w-2xl text-lg text-muted-foreground md:text-xl">
+                    Pin the damage, add a photo, and help repair teams respond with confidence.
+                  </Reveal>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="surface-panel p-4">
-                    <p className="text-sm text-muted-foreground">Potholes Reported</p>
-                    <p className="mt-1 text-2xl font-bold text-blue-500">{stats.reported}</p>
-                  </div>
-                  <div className="surface-panel p-4">
-                    <p className="text-sm text-muted-foreground">Reports In Progress</p>
-                    <p className="mt-1 text-2xl font-bold text-primary">{stats.pending}</p>
-                  </div>
-                  <div className="surface-panel p-4">
-                    <p className="text-sm text-muted-foreground">Roads Fixed</p>
-                    <p className="mt-1 text-2xl font-bold text-emerald-500">{stats.repaired}</p>
-                  </div>
+
+                <Reveal delay={200} className="flex flex-wrap gap-3">
+                  <Button asChild size="lg" className="px-7">
+                    <Link href="/report">
+                      <MapPin className="h-5 w-5" />
+                      Report Pothole
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="px-7">
+                    <Link href="/map">
+                      <Route className="h-5 w-5" />
+                      Explore Live Map
+                    </Link>
+                  </Button>
+                </Reveal>
+
+                <div className="grid gap-4 md:grid-cols-3 mt-[6vh]">
+                  {quickStats.map((item, index) => (
+                    <Reveal key={item.title} delay={260 + index * 70}>
+                      <Card className="metric-card">
+                        <CardContent className="p-5">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className={`grid h-12 w-12 place-items-center rounded-2xl ${item.glow}`}>
+                              <item.icon className="h-5 w-5" />
+                            </div>
+                            <div className={`h-2 w-20 rounded-full bg-gradient-to-r ${item.accent} opacity-85`} />
+                          </div>
+                          <p className="stat-value mt-6 text-4xl">{item.value}</p>
+                          <p className="mt-2 text-sm text-muted-foreground">{item.title}</p>
+                        </CardContent>
+                      </Card>
+                    </Reveal>
+                  ))}
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-3">
+                  {highlights.map((item, index) => (
+                    <Reveal key={item.title} delay={360 + index * 60}>
+                      <div className="glass-subtle p-4">
+                        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary dark:bg-white/10 dark:text-white">
+                          <item.icon className="h-4 w-4" />
+                        </div>
+                        <h2 className="font-primary text-base font-semibold">{item.title}</h2>
+                        <p className="mt-2 text-sm text-muted-foreground">{item.body}</p>
+                      </div>
+                    </Reveal>
+                  ))}
                 </div>
               </div>
 
-              <Card className="hero-shine surface-panel overflow-hidden p-0">
-                <div className="ambient-strip h-1.5 w-full" />
-                <CardContent className="space-y-5 p-6 md:p-8">
-                  <div className="rounded-xl border border-border/70 bg-background/75 p-3">
-                    <img
-                      src="/damaged-road-with-pothole-requiring-repair.jpg"
-                      alt="Damaged road with a pothole requiring repair"
-                      className="h-60 w-full rounded-lg object-cover md:h-72"
-                    />
+              <Reveal delay={180} className="hidden md:block xl:-mt-8 xl:self-start">
+                <div className="hero-shine relative min-h-[680px] overflow-hidden rounded-tr-[36px] rounded-br-[36px] rounded-bl-[36px] rounded-tl-[128px] border border-white/12 shadow-[0_40px_120px_-56px_rgba(11,17,53,0.95)] md:min-h-[740px] xl:min-h-[780px] left-15">
+                  <img
+                    src="/damaged-road-with-pothole-requiring-repair.jpg"
+                    alt="Damaged road with a pothole requiring repair"
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-slate-950/68 via-slate-950/16 to-slate-950/82" />
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(132,156,255,0.24),transparent_28%)]" />
+
+                  <div className="relative flex h-full min-h-[680px] flex-col justify-between p-6 md:min-h-[740px] md:p-8 xl:min-h-[780px] xl:p-10">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="max-w-md">
+                        <p className="section-kicker text-white/70">Incident preview</p>
+                        <h2 className="mt-2 text-2xl font-semibold text-white md:text-3xl">
+                          Keep pothole evidence clear and actionable.
+                        </h2>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+
+                      <div className="grid gap-3 md:grid-cols-3">
+                        {[
+                          ["Pin", "Map location locked in."],
+                          ["Review", "Authorities confirm the issue."],
+                          ["Repair", "Status updates stay visible."],
+                        ].map(([title, body], index) => (
+                          <Reveal
+                            key={title}
+                            delay={260 + index * 60}
+                            className="rounded-[22px] border border-white/14 bg-white/10 p-4 backdrop-blur-md"
+                          >
+                            <p className="font-primary text-sm font-semibold text-white">{title}</p>
+                            <p className="mt-2 text-sm leading-6 text-white/75">{body}</p>
+                          </Reveal>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between rounded-xl border border-border/70 bg-card/75 px-4 py-3">
-                      <span className="text-sm text-muted-foreground">Report Submitted</span>
-                      <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-300">Received</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-xl border border-border/70 bg-card/75 px-4 py-3">
-                      <span className="text-sm text-muted-foreground">Reviewed by Authorities</span>
-                      <span className="text-sm font-semibold text-blue-500">In Progress</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-xl border border-border/70 bg-card/75 px-4 py-3">
-                      <span className="text-sm text-muted-foreground">Location Verified</span>
-                      <span className="text-sm font-semibold text-primary">Ready for Repair</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              </Reveal>
             </div>
           </div>
         </section>
 
-        <section className="container mx-auto px-4 py-14 md:py-16">
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold md:text-3xl">Community Road Safety Overview</h2>
-              <p className="text-sm text-muted-foreground">
-                Live updates showing potholes reported and repairs completed by road authorities.
-              </p>
-            </div>
+        <section className="container mx-auto px-4 py-8 md:py-12">
+          <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <Reveal as="div">
+              <p className="section-kicker">How it works</p>
+              <h2 className="mt-2 text-3xl font-semibold md:text-4xl">A quick path from report to repair.</h2>
+            </Reveal>
           </div>
-          <div className="grid gap-5 md:grid-cols-3">
-            {quickStats.map((item) => (
-              <Card key={item.title} className="surface-panel">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className={`rounded-xl px-3 py-2 ${item.badgeClass}`}>
-                      <item.icon className="h-5 w-5" />
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {workflow.map((step, index) => (
+              <Reveal key={step.title} delay={140 + index * 80}>
+                <Card className="metric-card">
+                  <CardContent className="p-6">
+                    <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-sm font-semibold text-primary dark:bg-white/10 dark:text-white">
+                      {index + 1}
                     </div>
-                    <p className="text-3xl font-black tracking-tight">{item.value}</p>
-                  </div>
-                  <p className="mt-4 text-sm font-semibold">{item.title}</p>
-                </CardContent>
-              </Card>
+                    <h3 className="font-primary text-lg font-semibold">{step.title}</h3>
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">{step.body}</p>
+                  </CardContent>
+                </Card>
+              </Reveal>
             ))}
           </div>
         </section>
 
-        <section className="border-y border-border/70 bg-card/40 py-14 md:py-16">
-          <div className="container mx-auto px-4">
-            <div className="mb-8 max-w-2xl">
-              <h2 className="text-2xl font-bold md:text-3xl">How Reporting Works</h2>
-              <p className="mt-2 text-muted-foreground">
-                Reporting a pothole is quick and helps authorities repair roads faster.
-              </p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {[
-                {
-                  title: "Mark the Location",
-                  body: "Pin the exact location of the pothole on the map so repair teams can find it easily.",
-                },
-                {
-                  title: "Add Details",
-                  body: "Upload a photo and provide a short description of the road damage.",
-                },
-                {
-                  title: "Authorities Review",
-                  body: "Road officials review reports and schedule repair work where needed.",
-                },
-                {
-                  title: "Track Progress",
-                  body: "Follow updates as the pothole is reviewed and eventually repaired.",
-                },
-              ].map((step, index) => (
-                <Card key={step.title} className="surface-panel">
-                  <CardContent className="p-6">
-                    <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
-                      {index + 1}
-                    </div>
-                    <h3 className="text-lg font-semibold">{step.title}</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">{step.body}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <section className="container mx-auto px-4 py-14 md:py-16">
-          <div className="grid gap-5 lg:grid-cols-2">
-            <Card className="surface-panel">
-              <CardContent className="p-6 md:p-8">
-                <h3 className="text-xl font-bold">Our Commitment</h3>
-                <div className="mt-5 space-y-4">
-                  {[
-                    { icon: TimerReset, text: "Quick reporting that helps authorities respond faster." },
-                    { icon: ShieldCheck, text: "Reliable reporting that helps improve road safety." },
-                    { icon: Route, text: "Accurate map locations that guide repair teams directly to the issue." },
-                  ].map((item) => (
-                    <div key={item.text} className="flex items-start gap-3 rounded-xl border border-border/70 bg-background/75 p-3">
-                      <item.icon className="mt-0.5 h-4 w-4 text-primary" />
-                      <p className="text-sm text-muted-foreground">{item.text}</p>
-                    </div>
-                  ))}
+          <Reveal>
+            <Card className="surface-panel overflow-hidden p-0">
+              <div className="ambient-strip h-1.5 w-full" />
+              <CardContent className="grid gap-6 p-6 md:p-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+                <div>
+                  <p className="section-kicker">Ready to report</p>
+                  <h2 className="mt-2 text-3xl font-semibold md:text-4xl">See a pothole? Send it in.</h2>
                 </div>
-              </CardContent>
-            </Card>
-            <Card className="surface-panel">
-              <CardContent className="p-6 md:p-8">
-                <h3 className="text-xl font-bold">Ready To Report</h3>
-                <p className="mt-3 text-muted-foreground">
-                  Spotted a pothole? Report it now and help make roads safer for everyone in your community.
-                </p>
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <Button asChild className="rounded-full px-6">
-                    <Link href="/report">Report a Pothole</Link>
-                  </Button>
-                  <Button asChild variant="outline" className="rounded-full px-6">
-                    <Link href="/admin">Admin Portal</Link>
+                <div className="flex flex-wrap gap-3 lg:justify-end">
+                  <Button asChild size="lg" className="px-7">
+                    <Link href="/report">Start Reporting</Link>
                   </Button>
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </Reveal>
         </section>
       </main>
 
-      <footer className="border-t border-border/70 bg-card/70 py-8">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p className="font-semibold">Copyright {new Date().getFullYear()} RoadSafe</p>
-          <p className="mt-2">Building safer roads through community reporting.</p>
+      <footer className="border-t border-border/60 bg-card/55 py-8 backdrop-blur-xl">
+        <div className="container mx-auto flex flex-col gap-3 px-4 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="font-primary font-semibold text-foreground">RoadSafe</p>
+          </div>
+          <p>Copyright {new Date().getFullYear()} RoadSafe</p>
         </div>
       </footer>
     </div>

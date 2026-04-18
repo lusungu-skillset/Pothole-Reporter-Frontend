@@ -5,33 +5,34 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "font-primary inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full border border-transparent text-sm font-semibold tracking-[0.01em] transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-4 focus-visible:ring-primary/15 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        default:
+          "bg-gradient-to-r from-primary via-blue-500 to-cyan-400 text-primary-foreground shadow-[0_24px_58px_-30px_rgba(78,96,216,0.85)] hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[0_32px_72px_-30px_rgba(78,96,216,0.9)] active:translate-y-0 active:scale-[0.99]",
         destructive:
-          'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
+          "bg-gradient-to-r from-destructive via-rose-500 to-orange-400 text-white shadow-[0_24px_58px_-30px_rgba(220,38,38,0.72)] hover:-translate-y-0.5 hover:brightness-105 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
         outline:
-          'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
+          "border-border/70 bg-white/76 text-foreground shadow-[0_18px_44px_-34px_rgba(92,111,189,0.38)] hover:-translate-y-0.5 hover:border-primary/25 hover:bg-white/92 hover:text-foreground dark:border-white/10 dark:bg-white/7 dark:hover:bg-white/12",
         secondary:
-          'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+          "border-secondary/40 bg-secondary/82 text-secondary-foreground shadow-[0_18px_44px_-34px_rgba(103,182,214,0.26)] hover:-translate-y-0.5 hover:bg-secondary",
         ghost:
-          'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
-        link: 'text-primary underline-offset-4 hover:underline',
+          "text-foreground hover:-translate-y-0.5 hover:bg-white/70 hover:text-foreground hover:shadow-[0_18px_40px_-34px_rgba(92,111,189,0.26)] dark:hover:bg-white/8 dark:hover:text-white",
+        link: "rounded-none border-none p-0 text-primary shadow-none hover:text-primary/80 hover:underline",
       },
       size: {
-        default: 'h-9 px-4 py-2 has-[>svg]:px-3',
-        sm: 'h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5',
-        lg: 'h-10 rounded-md px-6 has-[>svg]:px-4',
-        icon: 'size-9',
-        'icon-sm': 'size-8',
-        'icon-lg': 'size-10',
+        default: "h-11 px-5 py-2.5 has-[>svg]:px-4",
+        sm: "h-9 gap-1.5 px-4 text-xs has-[>svg]:px-3",
+        lg: "h-12 px-7 text-sm has-[>svg]:px-5",
+        icon: "size-11 rounded-2xl",
+        "icon-sm": "size-9 rounded-xl",
+        "icon-lg": "size-12 rounded-2xl",
       },
     },
     defaultVariants: {
-      variant: 'default',
-      size: 'default',
+      variant: "default",
+      size: "default",
     },
   },
 )
@@ -46,7 +47,7 @@ function Button({
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
   }) {
-  const Comp = asChild ? Slot : 'button'
+  const Comp = asChild ? Slot : "button"
 
   return (
     <Comp

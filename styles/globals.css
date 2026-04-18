@@ -4,6 +4,11 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --font-primary: 'Poppins', sans-serif;
+  --font-secondary: 'Inter', sans-serif;
+  --text-heading-weight: 600;
+  --text-body-weight: 400;
+  --text-medium-weight: 500;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -75,7 +80,7 @@
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
+  --font-sans: 'Poppins', 'Inter', system-ui, sans-serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -119,7 +124,130 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  html {
+    font-family: var(--font-primary), var(--font-secondary), system-ui, sans-serif;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-secondary), system-ui, sans-serif;
+    font-weight: var(--text-body-weight);
+    line-height: 1.5;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-primary), var(--font-secondary), system-ui, sans-serif;
+    font-weight: var(--text-heading-weight);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  p,
+  li,
+  input,
+  textarea,
+  select,
+  table,
+  tbody,
+  td,
+  th,
+  small {
+    font-family: var(--font-secondary), system-ui, sans-serif;
+    line-height: 1.5;
+  }
+
+  button,
+  [role='button'],
+  nav a,
+  [data-slot='button'],
+  [data-slot='navigation-menu-link'] {
+    font-family: var(--font-primary), var(--font-secondary), system-ui, sans-serif;
+    font-weight: var(--text-medium-weight);
+    letter-spacing: 0.01em;
+    text-transform: none;
+  }
+
+  label,
+  small,
+  [data-slot='form-label'],
+  [data-slot='field-label'],
+  [data-slot='card-description'],
+  [data-slot='table-caption'] {
+    font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.875rem);
+    font-weight: var(--text-medium-weight);
+    opacity: 0.8;
+  }
+
+  [data-slot='card'],
+  [data-slot='card-content'],
+  [data-slot='card-description'],
+  [data-slot='card-footer'],
+  [data-slot='card-header'],
+  .surface-panel {
+    font-family: var(--font-secondary), system-ui, sans-serif;
+  }
+
+  [data-slot='card-title'] {
+    font-family: var(--font-primary), var(--font-secondary), system-ui, sans-serif;
+    font-weight: var(--text-heading-weight);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  [class*='text-2xl'],
+  [class*='text-3xl'],
+  [class*='text-4xl'],
+  [class*='text-5xl'],
+  [class*='text-6xl'] {
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .font-primary {
+    font-family: var(--font-primary), var(--font-secondary), system-ui, sans-serif;
+  }
+
+  .font-secondary {
+    font-family: var(--font-secondary), system-ui, sans-serif;
+  }
+
+  .heading-display {
+    font-family: var(--font-primary), var(--font-secondary), system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .body-copy {
+    font-family: var(--font-secondary), system-ui, sans-serif;
+    font-weight: var(--text-body-weight);
+    line-height: 1.5;
+  }
+
+  .label-copy {
+    font-family: var(--font-primary), var(--font-secondary), system-ui, sans-serif;
+    font-size: clamp(0.75rem, 0.72rem + 0.15vw, 0.875rem);
+    font-weight: var(--text-medium-weight);
+    letter-spacing: 0.01em;
+    opacity: 0.8;
+  }
+
+  .stat-value {
+    font-family: var(--font-primary), var(--font-secondary), system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .dashboard-widget {
+    font-family: var(--font-secondary), system-ui, sans-serif;
+    row-gap: 0.5rem;
   }
 }

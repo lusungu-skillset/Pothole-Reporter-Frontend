@@ -1,18 +1,26 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Inter, Poppins, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { AppProvider } from "@/contexts/app-context"
 import "leaflet/dist/leaflet.css"
 import "./globals.css"
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" })
+const poppins = Poppins({
+  subsets: ["latin"],
+  variable: "--font-poppins",
+  weight: ["500", "600", "700", "800"],
+})
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  weight: ["400", "500", "600", "700"],
+})
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" })
 
 export const metadata: Metadata = {
   title: "Pothole Reporter - Keep Roads Safe & Smooth",
   description: "Report potholes and track repair progress in real time",
-  generator: "v0.app",
   icons: {
     icon: [
       {
@@ -39,7 +47,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}>
+      <body className={`${poppins.variable} ${inter.variable} ${geistMono.variable} font-sans antialiased`}>
         <AppProvider>{children}</AppProvider>
         <Analytics />
       </body>

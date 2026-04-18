@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { API_BASE_URL } from "@/lib/api"
 
 type Severity = "LOW" | "MEDIUM" | "HIGH"
 
@@ -29,10 +30,7 @@ type ReportFormProps = {
 }
 
 const apiClient = axios.create({
-  baseURL: "http://localhost:3005",
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: API_BASE_URL,
 })
 
 export default function ReportForm({ selectedLocation, onSubmit }: ReportFormProps) {
@@ -49,9 +47,9 @@ export default function ReportForm({ selectedLocation, onSubmit }: ReportFormPro
 
   const severityColors: Record<Severity, string> = useMemo(
     () => ({
-      LOW: "bg-emerald-500/12 text-emerald-600 border-emerald-500/25 dark:text-emerald-300",
-      MEDIUM: "bg-amber-500/12 text-amber-600 border-amber-500/25 dark:text-amber-300",
-      HIGH: "bg-red-500/12 text-red-600 border-red-500/25 dark:text-red-300",
+      LOW: "border-emerald-500/20 bg-emerald-500/12 text-emerald-600 dark:text-emerald-300",
+      MEDIUM: "border-amber-500/20 bg-amber-500/12 text-amber-600 dark:text-amber-300",
+      HIGH: "border-rose-500/20 bg-rose-500/12 text-rose-600 dark:text-rose-300",
     }),
     [],
   )
@@ -87,9 +85,8 @@ export default function ReportForm({ selectedLocation, onSubmit }: ReportFormPro
 
       photos.forEach((file) => fd.append("photos", file))
 
-      const response = await apiClient.post("/potholes", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
+      // Let the browser set the multipart boundary for file uploads.
+      const response = await apiClient.post("/potholes", fd)
 
       setSuccess(true)
       onSubmit?.(response.data)
@@ -144,79 +141,114 @@ export default function ReportForm({ selectedLocation, onSubmit }: ReportFormPro
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
-        <h2 className="text-xl font-bold">Report Details</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Complete the form and submit through your existing multipart API endpoint.
+      {/* UI-only redesign: the form keeps its exact submission logic while gaining a clearer editorial hierarchy. */}
+      <div className="glass-subtle p-5">
+        <p className="section-kicker">Report details</p>
+        <h2 className="mt-2 text-2xl font-semibold">Capture the incident clearly.</h2>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">
+          Complete the form below and submit through the existing multipart reporting endpoint.
         </p>
       </div>
 
       {error && (
-        <Alert variant="destructive" className="border-red-500/30 bg-red-500/10">
+        <Alert variant="destructive" className="rounded-[22px] border-red-500/25 bg-red-500/10">
           <XCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       {success && (
-        <Alert className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200">
+        <Alert className="rounded-[22px] border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200">
           <CheckCircle2 className="h-4 w-4" />
           <AlertDescription>Report submitted successfully!</AlertDescription>
         </Alert>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="space-y-2">
-          <Label htmlFor="name" className="text-sm font-semibold">
-            Your Name <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="name"
-            placeholder="Enter your name"
-            value={formData.reporterName}
-            onChange={(e) => setFormData({ ...formData, reporterName: e.target.value })}
-            className="h-11 rounded-xl border-border/80 bg-background/70"
-          />
+        <div className="grid gap-5">
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-sm font-semibold">
+              Your Name <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="name"
+              placeholder="Enter your name"
+              value={formData.reporterName}
+              onChange={(e) => setFormData({ ...formData, reporterName: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm font-semibold">
+              Description <span className="text-red-500">*</span>
+            </Label>
+            <Textarea
+              id="description"
+              placeholder="Describe pothole size, lane risk, and nearby landmarks..."
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="min-h-[140px] resize-none"
+            />
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-[0.92fr_1.08fr]">
+            <div className="space-y-2">
+              <Label htmlFor="severity" className="text-sm font-semibold">
+                Severity Level
+              </Label>
+              <select
+                id="severity"
+                value={formData.severity}
+                onChange={(e) => setFormData({ ...formData, severity: e.target.value as Severity })}
+                className="select-field"
+              >
+                <option value="LOW">Low - Minor issue</option>
+                <option value="MEDIUM">Medium - Noticeable damage</option>
+                <option value="HIGH">High - Severe hazard</option>
+              </select>
+              <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${severityColors[formData.severity]}`}>
+                {formData.severity}
+              </span>
+            </div>
+
+            <Card
+              className={`rounded-[24px] border p-4 ${
+                selectedLocation
+                  ? "border-primary/25 bg-primary/8 dark:bg-white/7"
+                  : "border-border/70 bg-white/60 dark:bg-white/5"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className={`grid h-10 w-10 place-items-center rounded-2xl ${
+                    selectedLocation ? "bg-primary/12 text-primary dark:bg-white/10 dark:text-white" : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  <MapPin className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-primary text-sm font-semibold">Selected Location</p>
+                  {selectedLocation ? (
+                    <p className="mt-1 text-xs font-mono leading-6 text-muted-foreground">
+                      Lat: {selectedLocation.lat.toFixed(5)}, Lng: {selectedLocation.lng.toFixed(5)}
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                      Click the map to select the exact pothole position.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="description" className="text-sm font-semibold">
-            Description <span className="text-red-500">*</span>
-          </Label>
-          <Textarea
-            id="description"
-            placeholder="Describe pothole size, lane risk, and nearby landmarks..."
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="min-h-[120px] resize-none rounded-xl border-border/80 bg-background/70"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="severity" className="text-sm font-semibold">
-            Severity Level
-          </Label>
-          <select
-            id="severity"
-            value={formData.severity}
-            onChange={(e) => setFormData({ ...formData, severity: e.target.value as Severity })}
-            className="h-11 w-full rounded-xl border border-border/80 bg-background/70 px-3 text-sm"
-          >
-            <option value="LOW">Low - Minor issue</option>
-            <option value="MEDIUM">Medium - Noticeable damage</option>
-            <option value="HIGH">High - Severe hazard</option>
-          </select>
-          <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${severityColors[formData.severity]}`}>
-            {formData.severity}
-          </span>
-        </div>
-
-        <div className="space-y-2">
+        <div className="space-y-3">
           <Label className="flex items-center gap-2 text-sm font-semibold">
             <FileImage className="h-4 w-4" />
             Photos (Optional)
           </Label>
-          <div className="rounded-xl border-2 border-dashed border-border/80 bg-background/65 p-6 transition-colors hover:border-primary/45">
+          <div className="rounded-[24px] border-2 border-dashed border-border/75 bg-white/58 p-6 backdrop-blur-md transition-colors hover:border-primary/35 hover:bg-white/72 dark:bg-white/6">
             <input
               type="file"
               multiple
@@ -225,43 +257,32 @@ export default function ReportForm({ selectedLocation, onSubmit }: ReportFormPro
               className="hidden"
               id="photo-upload"
             />
-            <label htmlFor="photo-upload" className="flex cursor-pointer flex-col items-center gap-2 text-center">
-              <Upload className="h-8 w-8 text-muted-foreground" />
+            <label htmlFor="photo-upload" className="flex cursor-pointer flex-col items-center gap-3 text-center">
+              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary dark:bg-white/10 dark:text-white">
+                <Upload className="h-6 w-6" />
+              </div>
               <div>
-                <p className="text-sm font-semibold">Click to upload photos</p>
+                <p className="font-primary text-sm font-semibold">Click to upload photos</p>
                 <p className="mt-1 text-xs text-muted-foreground">Up to 3 images (JPG, PNG)</p>
               </div>
             </label>
           </div>
 
           {previews.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 pt-1">
+            <div className="grid grid-cols-3 gap-3 pt-1">
               {previews.map((url, idx) => (
-                <div key={idx} className="relative aspect-square overflow-hidden rounded-lg border border-border/80">
-                  <img src={url || "/placeholder.svg"} alt={`Preview ${idx + 1}`} className="h-full w-full object-cover" />
+                <div key={idx} className="image-card p-2">
+                  <div className="relative aspect-square overflow-hidden rounded-[18px]">
+                    <img src={url || "/placeholder.svg"} alt={`Preview ${idx + 1}`} className="h-full w-full object-cover" />
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        <Card className={`rounded-xl border p-4 ${selectedLocation ? "border-primary/30 bg-primary/10" : "border-border/80 bg-muted/30"}`}>
-          <div className="flex items-start gap-3">
-            <MapPin className={`mt-0.5 h-5 w-5 ${selectedLocation ? "text-primary" : "text-muted-foreground"}`} />
-            <div className="flex-1 min-w-0">
-              <p className="mb-1 text-sm font-semibold">Selected Location</p>
-              {selectedLocation ? (
-                <p className="text-xs font-mono text-muted-foreground">
-                  Lat: {selectedLocation.lat.toFixed(5)}, Lng: {selectedLocation.lng.toFixed(5)}
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground">Click on the map to select a location.</p>
-              )}
-            </div>
-          </div>
-        </Card>
 
-        <Button type="submit" disabled={loading || !selectedLocation} className="h-11 w-full rounded-xl font-semibold">
+        <Button type="submit" disabled={loading || !selectedLocation} className="w-full">
           {loading ? (
             <>
               <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-b-transparent" />
